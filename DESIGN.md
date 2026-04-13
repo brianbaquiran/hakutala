@@ -119,7 +119,7 @@ Figma Link: https://www.figma.com/make/0Yaot9DH1DjUu7wHsmr9BV/%E7%84%A1%E9%A1%8C
 
   9. Success criteria
 
-  • A musician can start/stop, read BPM, and see the downbeat in &lt; 2 seconds on first open without reading help
+  • A musician can start/stop, read BPM, and see the downbeat in under 2 seconds on first open without reading help
     text.
   • The UI feels intentionally designed (not default browser widgets stacked in a box).
   • Engineering can implement with plain CSS + variables without a new CSS framework.
