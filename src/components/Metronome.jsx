@@ -3,6 +3,7 @@ import { BpmControl } from './BpmControl';
 import { useMetronome } from '../hooks/useMetronome';
 import { useTapTempo } from '../hooks/useTapTempo';
 import { useMetronomeStore } from '../store/useMetronomeStore';
+import { VolumeControl } from './VolumeControl'; // Import VolumeControl
 import './Metronome.css';
 
 /**
@@ -31,6 +32,7 @@ export const Metronome = () => {
         {Array.from({ length: timeSignature.beatsPerMeasure }).map((_, i) => (
           <div 
             key={i} 
+            data-testid={`beat-dot-${i}`}
             className={`beat-dot ${i === currentBeat ? 'active' : ''} ${i === 0 ? 'downbeat' : ''}`}
           />
         ))}
@@ -49,6 +51,8 @@ export const Metronome = () => {
           <option value="7/8">7/8</option>
         </select>
       </div>
+      
+      <VolumeControl /> {/* Add VolumeControl here */}
 
       <div className="transport">
         <button className="tap-btn" onClick={tap}>TAP</button>

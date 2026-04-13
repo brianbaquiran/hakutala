@@ -2,7 +2,7 @@
  * MetronomeEngine handles the Web Audio API scheduling.
  * It uses a lookahead scheduler to ensure precise timing.
  */
-class MetronomeEngine {
+export class MetronomeEngine {
   constructor() {
     this.audioContext = null;
     this.timerID = null;
@@ -81,11 +81,17 @@ class MetronomeEngine {
   scheduleNote(beatNumber, time) {
     // Trigger onBeat callback for visual feedback
     if (this.onBeat) {
-      // Use a slightly earlier timing for UI to compensate for JS latency
-      // or just call it at the scheduled time. 
-      // Note: precise visual sync is harder, but this is a good start.
-      const delay = (time - this.audioContext.currentTime) * 1000;
-      setTimeout(() => this.onBeat(beatNumber), delay);
+      // Direct call to onBeat for immediate visual feedback.
+      // This bypasses any potential timing issues with setTimeout,
+      // which might be problematic in throttled environments or at zero gain.
+      this.onBeat(beatNumber);
+    }
+
+    // Web Audio: GainNode.exponentialRampToValueAtTime requires strictly
+    // positive values; at volume 0 the envelope math throws and the scheduler
+    // dies while the UI still shows "running". Skip audio; beats stay silent.
+    if (this.volume <= 0) {
+      return;
     }
 
     const osc = this.audioContext.createOscillator();
@@ -122,11 +128,14 @@ class MetronomeEngine {
   /**
    * Updates parameters while the metronome is running.
    */
-  updateParams(bpm, beatsPerMeasure, beatValue, volume) {
+  updateParams(bpm, beatsPerMeasure, beatValue, volume, onBeat) {
     this.bpm = bpm;
     this.beatsPerMeasure = beatsPerMeasure;
     this.beatValue = beatValue;
     this.volume = volume;
+    if (onBeat) { // Only update if a new onBeat is provided
+      this.onBeat = onBeat;
+    }
   }
 }
 

@@ -102,3 +102,42 @@ button:hover {
 .tap-btn:hover {
   background-color: #2980b9;
 }
+
+.volume-control {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%; /* Take full width of parent */
+  max-width: 250px; /* Limit slider width */
+}
+
+.volume-control input[type="range"] {
+  flex-grow: 1; /* Allow slider to take available space */
+  -webkit-appearance: none; /* Remove default styling */
+  appearance: none;
+  height: 8px;
+  background: var(--code-bg);
+  outline: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.volume-control input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--accent);
+  cursor: pointer;
+  border: 1px solid var(--accent);
+}
+
+.volume-control input[type="range"]::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--accent);
+  cursor: pointer;
+  border: 1px solid var(--accent);
+}

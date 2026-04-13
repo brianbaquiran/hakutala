@@ -38,12 +38,12 @@ export const useMetronome = (onBeat) => {
   useEffect(() => {
     if (isRunning) {
       metronomeEngine.updateParams(
-        bpm, 
+        bpm,
         timeSignature.beatsPerMeasure,
         timeSignature.beatValue,
-        volume
-      );
-    }
+        volume,
+        onBeat // Pass onBeat here
+      );    }
   }, [bpm, timeSignature, volume, isRunning]);
 
   const toggleMetronome = useCallback(() => {
