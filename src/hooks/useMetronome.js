@@ -15,11 +15,13 @@ export const useMetronome = (onBeat) => {
     setRunning 
   } = useMetronomeStore();
 
-  // Initialize and handle start/stop
+  // Start/stop only: do NOT list bpm, timeSignature, or volume here — that would
+  // stop/start the engine on every control change and reset scheduling. While
+  // running, those values are pushed via updateParams in the effect below.
   useEffect(() => {
     if (isRunning) {
       metronomeEngine.start(
-        bpm, 
+        bpm,
         timeSignature.beatsPerMeasure,
         timeSignature.beatValue,
         volume,
@@ -28,13 +30,12 @@ export const useMetronome = (onBeat) => {
     } else {
       metronomeEngine.stop();
     }
-    
-    // Cleanup on unmount or when isRunning changes
-    return () => metronomeEngine.stop();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isRunning, onBeat]); // Only re-run if running state or onBeat callback changes (initial start/stop)
 
-  // Update parameters while running
+    return () => metronomeEngine.stop();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only isRunning + onBeat; see comment above
+  }, [isRunning, onBeat]);
+
+  // Live parameter updates while running (including onBeat identity changes).
   useEffect(() => {
     if (isRunning) {
       metronomeEngine.updateParams(
@@ -42,9 +43,10 @@ export const useMetronome = (onBeat) => {
         timeSignature.beatsPerMeasure,
         timeSignature.beatValue,
         volume,
-        onBeat // Pass onBeat here
-      );    }
-  }, [bpm, timeSignature, volume, isRunning]);
+        onBeat
+      );
+    }
+  }, [bpm, timeSignature, volume, isRunning, onBeat]);
 
   const toggleMetronome = useCallback(() => {
     setRunning(!isRunning);
