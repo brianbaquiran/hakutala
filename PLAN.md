@@ -13,6 +13,39 @@ Living document for **Volume**, **Tap Tempo**, **AudioContext handling**, and **
 
 ---
 
+## Senior code review (summary)
+
+**Verdict:** This would **pass a pragmatic senior review for an early Phase 1 app** — architecture respects the “audio in `src/audio/`, UI through hooks” rule, the zero-volume bug was root-caused correctly (Web Audio exponential gain constraints), and the new engine tests are meaningful. A stricter reviewer would **request changes before a “production” merge**, mainly around React hook dependencies, tap-tempo implementation style, and a few engine/UX edge cases below.
+
+### Strengths
+
+- Clear separation: `MetronomeEngine` owns scheduling; components do not touch Web Audio.
+- Lookahead scheduler + `currentTime` for note times matches established practice.
+- Exporting `MetronomeEngine` as a class for tests while keeping a singleton for the app is a reasonable compromise.
+- Engine tests use a mock that encodes real browser rules (strictly positive exponential gain), not only happy-path mocks.
+- Volume is single-sourced in Zustand and threaded consistently into `start` / `updateParams`.
+
+### Issues a senior would likely raise
+
+| Severity | Topic | Detail |
+|----------|--------|--------|
+| **Medium** | `useMetronome` effects | First `useEffect` intentionally omits `bpm`, `timeSignature`, `volume` from deps (eslint disabled). That avoids restarting the whole engine on every BPM tick, but it deserves a **short comment explaining the contract**: live updates must go through `updateParams`. Without that, future edits may “fix” deps and regress behavior. |
+| **Medium** | `useMetronome` second effect | Omits `onBeat` from the dependency array. Safe today because `Metronome` stabilizes `onBeat` with `useCallback([])`, but **fragile** if a caller passes an inline function. Either add `onBeat` to deps or document “stable callback required”. |
+| **Medium** | `onBeat` from scheduler | `scheduleNote` invokes `onBeat` synchronously inside the `while` loop, so **many React `setState` calls can run in one timer tick** at high BPM or when the tab catches up. Can cause jank or React warnings. Long-term: throttle to animation frames, batch, or drive visuals off `currentTime` + `requestAnimationFrame`. |
+| **Low** | `useTapTempo` | `tap` depends on `taps` state, so the callback identity **changes every tap** — unnecessary for current usage but a smell; a ref-based tap buffer avoids stale-pattern risk and extra renders if `tap` is ever passed deep. |
+| **Low** | `MetronomeEngine.stop` | Only `clearTimeout`; does not null `timerID` or drain already-scheduled nodes (acceptable for Phase 1). Double `stop` is fine. |
+| **Low** | `resume()` | `audioContext.resume()` returns a Promise and is not awaited; races are rare but a pedantic reviewer might ask for `void resume().catch(...)` or await in a dedicated init path. |
+| **Low** | `VolumeControl` | `parseFloat` without NaN guard; store clamps help but **defensive parse** (or `Number.isFinite`) is cheap. Slider **a11y** (`aria-valuenow` / text value) still open. |
+| **Low** | JSX hygiene | Redundant comments (`// Import VolumeControl`, `{/* Add VolumeControl here */}`) look like scaffolding; a senior would ask to **remove** them in a polish pass. |
+| **Low** | Test gaps | `updateParams`, suspended `resume` branch, and real `init()` path are **uncovered** in engine tests (mock context pre-injected). `setVolume` / slider interaction still light on tests. |
+
+### Would it ship?
+
+- **Internal / Phase 1.3 milestone:** yes, with the above logged as follow-ups.
+- **App-store “polish” bar:** not yet — address at least hook documentation or deps, `onBeat` scheduling strategy, AudioContext resume UX on non-START gestures, and basic a11y on the volume control.
+
+---
+
 ## Current state (as of this plan)
 
 ### Done
@@ -20,20 +53,21 @@ Living document for **Volume**, **Tap Tempo**, **AudioContext handling**, and **
 | Area | Status |
 |------|--------|
 | **Store** | `volume` (default `0.8`), `setVolume` clamped to `[0, 1]` in `useMetronomeStore`. |
-| **Engine** | `MetronomeEngine.start` / `updateParams` accept `volume`; click gain uses `envelope.gain` with `volume`. `start()` calls `init()`, resumes if `suspended`, then schedules. |
+| **Engine** | `start` / `updateParams` accept `volume`; silent path at `volume <= 0` avoids invalid exponential ramps; scheduler keeps running. |
 | **Hook** | `useMetronome` passes `volume` into `start` and `updateParams` while running. |
-| **UI** | `VolumeControl` — labeled range `0–1`, step `0.01`, bound to store. Styles live in `Metronome.css` (plain CSS, consistent with the rest of the screen). |
-| **Tap tempo** | `useTapTempo` — moving average over up to 4 taps, 2s idle reset, updates `setBpm` (clamped by store). Unit tests in `useTapTempo.test.js`. |
-| **Metronome screen** | TAP button, START/STOP, BPM, time signature, beat dots, volume slider. |
-| **Tests** | `Metronome.test.jsx` covers engine mock with `volume` arg and beat indicator at volume `0`. |
+| **UI** | `VolumeControl` — labeled range `0–1`, step `0.01`, bound to store. Styles in `Metronome.css` (plain CSS). |
+| **Tap tempo** | `useTapTempo` — moving average over up to 4 taps, 2s idle reset, updates `setBpm` (clamped by store). Tests in `useTapTempo.test.js`. |
+| **Metronome screen** | TAP, START/STOP, BPM, time signature, beat dots, volume. |
+| **Tests** | `MetronomeEngine.test.js` (volume 0 scheduling, oscillator path); `Metronome.test.jsx` (mock engine, beat UI at volume 0). |
+| **Coverage** | `npm run test:coverage`; `@vitest/coverage-v8`; `coverage/` gitignored. |
 
-### Gaps / risks
+### Open gaps (rolled forward from review)
 
-- **`AudioContext.resume()`** is only invoked from `MetronomeEngine.start()`. Gestures that change tempo or volume **without** starting (e.g. TAP only, or slider only) may leave the context suspended until START — acceptable for some UX, but worth validating on Safari/mobile and deciding if TAP or first interaction should `resume()` proactively.
-- **`useMetronome`**: the “live update” `useEffect` dependency list omits `onBeat`; if `onBeat` identity changes while running, the engine might keep an old callback until another param changes. Low priority if `Metronome` keeps `onBeat` stable via `useCallback([])`.
-- **Test coverage**: no dedicated tests for `setVolume` / `VolumeControl` / passing volume into the engine from an integration-style test; no `MetronomeEngine` unit tests (project guidance: run `npm run test` after `src/audio/` changes — engine tests would support that).
-- **Tap tempo**: first tap after a long gap only seeds timing (by design); document or test edge cases (single tap, very fast taps hitting BPM clamp20–300).
-- **Polish**: optional numeric volume readout, ARIA for slider, keyboard focus order, disabled/visual state when stopped (if desired).
+- **`AudioContext.resume()`** still only from `start()`. Validate TAP-only / volume-only then START on Safari; consider `resume` on first relevant gesture in `src/audio/` if needed.
+- **`onBeat` / React:** consider throttling or rAF if profiling shows issues.
+- **`useTapTempo`:** optional ref refactor; tests for BPM clamp edges.
+- **Tests:** store `setVolume`; slider changes `updateParams`; engine branches for `updateParams`, `suspended` + `resume`, and `init()` without pre-set context (integration or stripped-down test).
+- **Polish:** remove scaffolding JSX comments; ARIA / numeric volume readout optional.
 
 ---
 
@@ -41,42 +75,46 @@ Living document for **Volume**, **Tap Tempo**, **AudioContext handling**, and **
 
 Ordered so each step is shippable and testable.
 
-### 1. Lock in Volume behavior (tests + edge cases)
+### 1. Hook clarity and safety (small PR)
 
-- Add store tests for `setVolume` (in-range, clamp below 0 / above 1).
-- Add a `Metronome` (or `VolumeControl`) test: moving the slider updates store and that `metronomeEngine.updateParams` receives the new volume when running (extend existing mock pattern).
-- Optionally add a small `MetronomeEngine` test module: after `start` with a stubbed/minimal context, assert scheduled gain or that `volume` is applied (only if we can do it without brittle Web Audio mocking).
+- Document in `useMetronome.js` why effect deps are narrowed; add `onBeat` to the update effect **or** document stability requirement.
+- Fix trivial formatting (`useMetronome` closing brace alignment).
 
-### 2. AudioContext robustness
+### 2. Volume tests and UX
 
-- Manually verify: fresh load → START hears audio; load → adjust volume → START; load → TAP only → START; Safari / mobile if available.
-- If needed: expose a small `resumeAudioContextIfNeeded()` (or call `init()` + `resume()` from hook on first user gesture: START, TAP, or volume change) so the first audible action is reliable. Keep all Web Audio calls in `src/audio/`.
+- Store tests for `setVolume`; component test driving the range input.
+- Optional: `aria-valuenow` / min / max on the volume slider; strip JSX noise comments in `Metronome.jsx`.
 
-### 3. Tap tempo hardening
+### 3. AudioContext robustness
 
-- Confirm UX: whether first two taps should set BPM immediately (currently BPM updates from the third tap onward when using the moving average — tests document current behavior).
-- Add tests for: BPM clamping via tap (e.g. intervals implying < 20 or > 300 BPM), and any bug fixes (e.g. stale closure in `useTapTempo` if we refactor to refs instead of `taps` in `useCallback` deps).
+- Manual matrix: fresh load, volume before START, TAP before START, Safari if available.
+- If gaps: centralize `resume` in the audio layer on first user gesture that should affect audio.
 
-### 4. Phase 1.3 UI polish (minimal, on-brand)
+### 4. Tap tempo hardening
 
-- Align TAP / START / volume block spacing and labels with existing `Metronome.css` variables.
-- Optional: `aria-valuenow` / `aria-valuemin` / `aria-valuemax` on the volume slider for screen readers.
-- Remove leftover-only comments in JSX if any (keep code review clean).
+- Confirm product intent for “first two taps” vs moving average from tap 3.
+- Refactor to refs if profiling or lint rules push that way; add clamp tests.
 
-### 5. Close Phase 1.3
+### 5. Engine tests (incremental)
 
-- Run `npm run test` and `npm run lint`; fix regressions.
-- Update or add acceptance-style tests that match what we want for 1.3 (volume audible range, tap updates BPM, start/stop still correct).
-- When satisfied, treat Phase 1.3 as complete per `AGENTS.md` and move focus to Phase 2 planning separately.
+- Cover `updateParams` while running (volume change mid-stream).
+- Optional: test with `state: 'suspended'` and assert `resume` called.
+
+### 6. Close Phase 1.3
+
+- Run `npm run test`, `npm run test:coverage`, `npm run lint`.
+- Revisit definition of done below; then treat Phase 1.3 as complete per `AGENTS.md`.
 
 ---
 
 ## Definition of done (Phase 1.3)
 
-- [ ] Volume reliably affects click loudness; slider (and store clamps) covered by tests where practical.
-- [ ] Tap tempo updates BPM within 20–300; long pause resets; tests cover main paths and clamps.
-- [ ] No known case where a normal user gesture path leaves audio permanently silent solely because `AudioContext` stayed suspended (document platform exceptions if any remain).
-- [ ] UI for volume + tap + transport is coherent with existing plain CSS and readable on a narrow viewport.
+- [x] Volume affects click loudness; zero volume does not kill the scheduler (regression covered by engine tests).
+- [ ] Slider / `setVolume` covered by automated tests where practical.
+- [ ] Tap tempo: main paths + BPM clamp edges tested; UX for first taps agreed.
+- [ ] `useMetronome` dependency / callback contract documented or fixed.
+- [ ] No known blocker where a normal gesture leaves audio silent only because `AudioContext` stayed suspended (or documented platform exception).
+- [ ] UI coherent on narrow viewport; scaffolding comments removed.
 
 ---
 
@@ -85,6 +123,7 @@ Ordered so each step is shippable and testable.
 | File | Role |
 |------|------|
 | `src/audio/MetronomeEngine.js` | Volume in synthesis; `resume`; scheduling |
+| `src/audio/MetronomeEngine.test.js` | Engine regressions (silent volume, strict gain mock) |
 | `src/hooks/useMetronome.js` | Passes volume; start/stop lifecycle |
 | `src/hooks/useTapTempo.js` | Tap → BPM |
 | `src/store/useMetronomeStore.js` | `volume`, `setVolume` |
@@ -97,5 +136,5 @@ Ordered so each step is shippable and testable.
 
 ## Notes
 
-- **Dependencies**: No new npm packages for Phase 1.3 unless you explicitly approve.
-- **CSS**: Continue plain CSS in component files (current pattern); no Tailwind/CSS Modules unless the project shifts globally.
+- **Dependencies**: No new npm packages for Phase 1.3 unless explicitly approved (coverage tooling already added).
+- **CSS**: Plain CSS in component files; no Tailwind/CSS Modules unless the project shifts globally.
