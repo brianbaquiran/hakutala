@@ -80,32 +80,87 @@ npx cap open ios     # Open Xcode
 
 ## Feature Roadmap
 
-### Phase 1 — Core Metronome (current focus)
-- BPM control: tap tempo, +/- buttons, numeric input (range: 20–300)
-- Time signatures: 2/4, 3/4, 4/4, 5/4, 6/8, 7/8
-- Start/stop toggle
-- Visual beat indicator (flash on downbeat)
-- Accent beat vs. regular beat (synthesized audio only)
-- Volume control
+### Phase 1 — Core Metronome
+- **Phase 1.1: Basic Controls & Engine**
+  - Implement BPM control (numeric input, +/- buttons)
+  - Implement Start/Stop toggle
+  - Basic Web Audio API engine with synthesized clicks
+  - Integrate `useMetronomeStore` and `useMetronome` hook
+  - **Acceptance Criteria (Tests):**
+    - Verify BPM can be set via input and +/- buttons.
+    - Verify BPM value is within 20-300 range.
+    - Verify metronome starts and stops via toggle button.
+    - Verify `useMetronome` hook correctly interacts with `metronomeEngine.start()` and `metronomeEngine.stop()`.
+    - Verify `MetronomeEngine` initializes `AudioContext` and schedules notes.
+    - Verify `MetronomeEngine` plays distinct sounds for downbeats (first beat) and regular beats.
+    - Verify `useMetronomeStore` updates `bpm` and `isRunning` states correctly.
+- **Phase 1.2: Time Signature & Visuals**
+  - Implement Time Signature selection (2/4, 3/4, 4/4, 5/4, 6/8, 7/8)
+  - Develop Visual Beat Indicator (flash on downbeat)
+  - Differentiate accent beat vs. regular beat audio
+  - **Acceptance Criteria (Tests):**
+    - (To be defined)
+- **Phase 1.3: Volume & Tap Tempo**
+  - Implement Volume control
+  - Integrate Tap Tempo functionality
+  - Ensure robust audio context handling (resume on user gesture)
+  - Initial UI/UX polish for core features
+  - **Acceptance Criteria (Tests):**
+    - (To be defined)
 
 ### Phase 2 — Rhythm Guide
-- Subdivisions: quarter, 8th, 16th, triplets
-- Preset rhythm patterns (bossa nova, shuffle, rock, waltz, etc.)
-- Multiple sound voices (hi-hat, kick, snare, woodblock)
-- Per-beat accent levels (3 levels)
-- A/B pattern switching
-- Real audio samples (replace synthesized clicks)
+- **Phase 2.1: Subdivisions & Basic Samples**
+  - Add subdivision selection (quarter, 8th, 16th, triplets)
+  - Introduce `public/sounds/` directory and basic `.wav` sample loading
+  - Replace synthesized clicks with `AudioBuffer` sample playback for basic beats
+  - **Acceptance Criteria (Tests):**
+    - (To be defined)
+- **Phase 2.2: Pattern Management & Multiple Voices**
+  - Implement preset rhythm patterns (bossa nova, shuffle, rock, waltz)
+  - Introduce multiple sound voices (hi-hat, kick, snare, woodblock)
+  - Develop a mechanism for per-beat accent levels (3 levels)
+  - **Acceptance Criteria (Tests):**
+    - (To be defined)
+- **Phase 2.3: Advanced Pattern Features**
+  - Implement A/B pattern switching
+  - Refine UI for pattern selection and customization
+  - Optimize sample loading and playback performance
+  - **Acceptance Criteria (Tests):**
+    - (To be defined)
 
 ### Phase 3 — Song Mode
-- Pattern chaining with repeat counts
-- Gradual BPM increase mode (speeds up every N bars)
-- Named pattern storage via localStorage
-- Mute individual instruments per beat
+- **Phase 3.1: Pattern Sequencing**
+  - Implement pattern chaining with repeat counts
+  - Develop UI for sequencing patterns
+  - **Acceptance Criteria (Tests):**
+    - (To be defined)
+- **Phase 3.2: Dynamic Tempo & Storage**
+  - Implement gradual BPM increase mode (speeds up every N bars)
+  - Implement named pattern storage via `localStorage`
+  - **Acceptance Criteria (Tests):**
+    - (To be defined)
+- **Phase 3.3: Instrument Control**
+  - Add functionality to mute individual instruments per beat
+  - Enhance UI for detailed song mode editing
+  - **Acceptance Criteria (Tests):**
+    - (To be defined)
 
 ### Phase 4 — Native Mobile Polish
-- Haptic feedback on the beat (Capacitor Haptics plugin)
-- Background audio (keep playing when screen locks)
-- MIDI sync (advanced, post-launch)
+- **Phase 4.1: Haptics & Background Audio**
+  - Integrate Capacitor Haptics plugin for haptic feedback
+  - Implement background audio playback
+  - **Acceptance Criteria (Tests):**
+    - (To be defined)
+- **Phase 4.2: Basic Mobile UI/UX**
+  - Optimize UI for mobile platforms (Android/iOS)
+  - Address any platform-specific UI issues or interactions
+  - **Acceptance Criteria (Tests):**
+    - (To be defined)
+- **Phase 4.3: Advanced Mobile Features (Post-launch consideration)**
+  - Investigate and plan for MIDI sync (if requested post-launch)
+  - Further performance optimizations for mobile.
+  - **Acceptance Criteria (Tests):**
+    - (To be defined)
 
 ---
 

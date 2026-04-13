@@ -11,6 +11,8 @@ audio engine rules, branding rules, and code conventions.
 This project is a learning exercise for a non-frontend developer. When making
 changes:
 - Explain what you are doing and why before writing code
+- Develop using TDD. Write test first, show it fails. Then implement the minimum required to make the test pass. Refactor and refine.
+- Check in to git whenever you get to a good stopping point and all tests pass. 
 - Add inline comments to non-obvious logic, especially in `src/audio/`
 - If asked to build a feature, break it into small, reviewable steps
 - Ask before creating new files or directories not in the planned structure
