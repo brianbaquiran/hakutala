@@ -15,6 +15,7 @@ class MetronomeEngine {
     this.bpm = 120;
     this.beatsPerMeasure = 4;
     this.volume = 0.8;
+    this.beatValue = 4;
     
     // Callback for UI updates (e.g., visual beat indicator)
     this.onBeat = null;
@@ -33,7 +34,7 @@ class MetronomeEngine {
   /**
    * Starts the metronome scheduler.
    */
-  start(bpm, beatsPerMeasure, volume, onBeat) {
+  start(bpm, beatsPerMeasure, beatValue, volume, onBeat) {
     this.init();
     
     // Resume context in case it was suspended (browser policy)
@@ -43,6 +44,7 @@ class MetronomeEngine {
 
     this.bpm = bpm;
     this.beatsPerMeasure = beatsPerMeasure;
+    this.beatValue = beatValue;
     this.volume = volume;
     this.onBeat = onBeat;
 
@@ -109,7 +111,8 @@ class MetronomeEngine {
    * Advances the internal beat counter and calculates the next note time.
    */
   nextNote() {
-    const secondsPerBeat = 60.0 / this.bpm;
+    // Corrected calculation for seconds per beat based on beatValue
+    const secondsPerBeat = (60.0 / this.bpm) * (4 / this.beatValue);
     this.nextNoteTime += secondsPerBeat; // Add beat length to last beat time
 
     // Advance beat, wrap around measure
@@ -119,9 +122,10 @@ class MetronomeEngine {
   /**
    * Updates parameters while the metronome is running.
    */
-  updateParams(bpm, beatsPerMeasure, volume) {
+  updateParams(bpm, beatsPerMeasure, beatValue, volume) {
     this.bpm = bpm;
     this.beatsPerMeasure = beatsPerMeasure;
+    this.beatValue = beatValue;
     this.volume = volume;
   }
 }

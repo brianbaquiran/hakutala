@@ -20,7 +20,8 @@ export const useMetronome = (onBeat) => {
     if (isRunning) {
       metronomeEngine.start(
         bpm, 
-        timeSignature.beatsPerMeasure, 
+        timeSignature.beatsPerMeasure,
+        timeSignature.beatValue,
         volume,
         onBeat
       );
@@ -38,7 +39,8 @@ export const useMetronome = (onBeat) => {
     if (isRunning) {
       metronomeEngine.updateParams(
         bpm, 
-        timeSignature.beatsPerMeasure, 
+        timeSignature.beatsPerMeasure,
+        timeSignature.beatValue,
         volume
       );
     }

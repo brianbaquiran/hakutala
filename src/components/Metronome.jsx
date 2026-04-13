@@ -3,6 +3,7 @@ import { BpmControl } from './BpmControl';
 import { useMetronome } from '../hooks/useMetronome';
 import { useTapTempo } from '../hooks/useTapTempo';
 import { useMetronomeStore } from '../store/useMetronomeStore';
+import './Metronome.css';
 
 /**
  * Main Metronome component that combines all controls and the audio engine.
@@ -20,8 +21,8 @@ export const Metronome = () => {
   const { timeSignature, setTimeSignature } = useMetronomeStore();
 
   const handleTimeSignatureChange = (e) => {
-    const beats = parseInt(e.target.value, 10);
-    setTimeSignature(beats, timeSignature.beatValue);
+    const [beats, value] = e.target.value.split('/').map(Number);
+    setTimeSignature(beats, value);
   };
 
   return (
@@ -39,10 +40,13 @@ export const Metronome = () => {
 
       <div className="time-signature">
         <label htmlFor="ts-select">Time Signature</label>
-        <select id="ts-select" value={timeSignature.beatsPerMeasure} onChange={handleTimeSignatureChange}>
-          {[2, 3, 4, 5, 6, 7].map(n => (
-            <option key={n} value={n}>{n}/4</option>
-          ))}
+        <select id="ts-select" value={`${timeSignature.beatsPerMeasure}/${timeSignature.beatValue}`} onChange={handleTimeSignatureChange}>
+          <option value="2/4">2/4</option>
+          <option value="3/4">3/4</option>
+          <option value="4/4">4/4</option>
+          <option value="5/4">5/4</option>
+          <option value="6/8">6/8</option>
+          <option value="7/8">7/8</option>
         </select>
       </div>
 
