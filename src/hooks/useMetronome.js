@@ -30,7 +30,8 @@ export const useMetronome = (onBeat) => {
     
     // Cleanup on unmount or when isRunning changes
     return () => metronomeEngine.stop();
-  }, [isRunning, onBeat]); // Only re-run if running state or callback changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isRunning, onBeat]); // Only re-run if running state or onBeat callback changes (initial start/stop)
 
   // Update parameters while running
   useEffect(() => {
