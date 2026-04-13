@@ -1,6 +1,8 @@
  Design brief: Hakutala (web metronome)
 
-Figma Link: https://www.figma.com/make/0Yaot9DH1DjUu7wHsmr9BV/%E7%84%A1%E9%A1%8C?t=Mv7tE9EJuv5jJobZ-1
+Figma (editor): https://www.figma.com/make/0Yaot9DH1DjUu7wHsmr9BV/%E7%84%A1%E9%A1%8C?t=Mv7tE9EJuv5jJobZ-1
+
+Published prototype: https://poppy-dish-10965455.figma.site/
 
   1. Product
 
