@@ -23,3 +23,6 @@ coverage
 *.njsproj
 *.sln
 *.sw?
+
+# Local Figma Make export (reference only; not part of the shipped app)
+design/figma - hakatala/

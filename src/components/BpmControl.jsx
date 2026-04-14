@@ -14,17 +14,42 @@ export const BpmControl = () => {
 
   return (
     <div className="bpm-control">
-      <label htmlFor="bpm-input">BPM</label>
-      <button onClick={handleDecrement}>-</button>
-      <input
-        id="bpm-input"
-        type="number"
-        value={bpm}
-        onChange={handleChange}
-        min="20"
-        max="300"
-      />
-      <button onClick={handleIncrement}>+</button>
+      <label className="bpm-control__label" htmlFor="bpm-input">
+        Tempo
+      </label>
+      <div className="bpm-control__row">
+        <button
+          type="button"
+          className="bpm-control__step"
+          onClick={handleDecrement}
+          disabled={bpm <= 20}
+          aria-label="Decrease tempo"
+        >
+          -
+        </button>
+        <div className="bpm-control__value-wrap">
+          <input
+            id="bpm-input"
+            className="bpm-control__input"
+            type="number"
+            value={bpm}
+            onChange={handleChange}
+            min="20"
+            max="300"
+            aria-label="Tempo in BPM"
+          />
+          <div className="bpm-control__unit">BPM</div>
+        </div>
+        <button
+          type="button"
+          className="bpm-control__step"
+          onClick={handleIncrement}
+          disabled={bpm >= 300}
+          aria-label="Increase tempo"
+        >
+          +
+        </button>
+      </div>
     </div>
   );
 };
