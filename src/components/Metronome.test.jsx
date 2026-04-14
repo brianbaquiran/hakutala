@@ -86,33 +86,33 @@ describe('Metronome', () => {
       getOnBeatCallback()(0);
     });
     let beatDots = screen.getAllByTestId(/beat-dot-/i); // Assuming beat dots have a test id
-    expect(beatDots[0]).toHaveClass('active');
-    expect(beatDots[0]).toHaveClass('downbeat');
-    expect(beatDots[1]).not.toHaveClass('active');
+    expect(beatDots[0]).toHaveClass('metronome__beat-dot--active');
+    expect(beatDots[0]).toHaveClass('metronome__beat-dot--downbeat');
+    expect(beatDots[1]).not.toHaveClass('metronome__beat-dot--active');
 
     // Beat 1
     act(() => {
       getOnBeatCallback()(1);
     });
     beatDots = screen.getAllByTestId(/beat-dot-/i);
-    expect(beatDots[0]).not.toHaveClass('active');
-    expect(beatDots[1]).toHaveClass('active');
-    expect(beatDots[1]).not.toHaveClass('downbeat');
+    expect(beatDots[0]).not.toHaveClass('metronome__beat-dot--active');
+    expect(beatDots[1]).toHaveClass('metronome__beat-dot--active');
+    expect(beatDots[1]).not.toHaveClass('metronome__beat-dot--downbeat');
 
     // Beat 2
     act(() => {
       getOnBeatCallback()(2);
     });
     beatDots = screen.getAllByTestId(/beat-dot-/i);
-    expect(beatDots[1]).not.toHaveClass('active');
-    expect(beatDots[2]).toHaveClass('active');
+    expect(beatDots[1]).not.toHaveClass('metronome__beat-dot--active');
+    expect(beatDots[2]).toHaveClass('metronome__beat-dot--active');
 
     // Beat 3
     act(() => {
       getOnBeatCallback()(3);
     });
     beatDots = screen.getAllByTestId(/beat-dot-/i);
-    expect(beatDots[2]).not.toHaveClass('active');
-    expect(beatDots[3]).toHaveClass('active');
+    expect(beatDots[2]).not.toHaveClass('metronome__beat-dot--active');
+    expect(beatDots[3]).toHaveClass('metronome__beat-dot--active');
   });
 });
